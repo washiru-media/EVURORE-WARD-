@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MBEERE NORTH POLITICS | Evurore Ward MCA Polls</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --green:#0b6623;
+  --red:#b11226;
+  --gold:#d4af37;
+  --black:#0b0b0b;
+  --white:#ffffff;
+}
+
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Poppins',sans-serif;background:linear-gradient(135deg,#000,#0b6623);color:var(--white);}
+header{background:linear-gradient(90deg,var(--black),var(--green));padding:30px 20px;text-align:center;border-bottom:3px solid var(--gold);}
+header h1{font-family:'Playfair Display',serif;color:var(--gold);margin:0;font-size:32px;}
+header p{margin-top:8px;color:#ddd;letter-spacing:1px;}
+.container{max-width:1100px;margin:auto;padding:20px;}
+.card{background:rgba(0,0,0,0.7);border:1px solid var(--gold);border-radius:16px;padding:25px;margin-bottom:25px;box-shadow:0 10px 30px rgba(0,0,0,0.6);}
+.card h2{font-family:'Playfair Display',serif;color:var(--gold);text-align:center;}
+.candidates{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px;margin-top:20px;}
+.candidate{background:linear-gradient(145deg,#111,#1b3d1b);border:1px solid var(--gold);border-radius:14px;padding:15px;text-align:center;transition: transform 0.3s ease, box-shadow 0.3s ease;}
+.candidate.vote-animation{transform: scale(1.1);box-shadow: 0 0 20px var(--gold);}
+.candidate h3{margin:10px 0;color:var(--gold);}
+.vote-btn{background:linear-gradient(90deg,var(--gold),#bfa335);border:none;padding:10px 20px;border-radius:30px;font-weight:bold;cursor:pointer;transition: transform 0.2s, opacity 0.3s;}
+.vote-btn:hover{transform:scale(1.05);}
+.vote-btn:disabled{opacity:0.5;cursor:default;}
+.stats{text-align:center;margin-top:10px;font-weight:bold;color:#ffb;}
+.chart-box{background:#fff;padding:15px;border-radius:12px;}
+.chart-box canvas{width:100% !important;height:auto !important;}
+.share{display:flex;justify-content:center;gap:15px;margin-top:20px;flex-wrap:wrap;}
+.share button{padding:10px 20px;border:none;border-radius:30px;cursor:pointer;font-weight:bold;}
+.fb{background:#1877f2;color:#fff;}
+.wa{background:#25d366;color:#fff;}
+.donate{background:linear-gradient(90deg,var(--red),#ff3b3b);text-align:center;padding:20px;border-radius:16px;margin-top:25px;font-size:18px;font-weight:bold;}
+.admin{display:none;}
+.admin input{padding:10px;width:100%;margin-bottom:10px;border-radius:8px;border:none;}
+.admin button{padding:10px;width:100%;border:none;border-radius:8px;background:var(--gold);font-weight:bold;cursor:pointer;}
+.vote-popup{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--gold);color:#000;padding:15px 25px;border-radius:30px;font-weight:bold;box-shadow:0 5px 20px rgba(0,0,0,0.5);opacity:0;pointer-events:none;transition: opacity 0.5s, transform 0.5s;z-index:999;}
+.vote-popup.show{opacity:1;transform:translateX(-50%) translateY(0);}
+footer{text-align:center;padding:20px;color:#ccc;font-size:14px;}
+</style>
+</head>
+
+<body>
+<header>
+  <h1>MBEERE NORTH POLITICS</h1>
+  <p>EVURORE WARD • MCA LIVE POLLS</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h2>Cast Your Vote</h2>
+<div class="candidates" id="candidates"></div>
+<p id="voteStatus" style="text-align:center;margin-top:15px;color:#ffb;"></p>
+</div>
+
+<div class="card">
+<h2>Live Rankings (%)</h2>
+<div class="chart-box">
+<canvas id="pollChart"></canvas>
+</div>
+</div>
+
+<div class="card">
+<h2>Share This Poll</h2>
+<div class="share">
+<button class="fb" onclick="shareFacebook()">Facebook</button>
+<button class="wa" onclick="shareWhatsApp()">WhatsApp</button>
+</div>
+</div>
+
+<div class="donate">
+Support Civic Engagement<br>
+Donate via <b>M-Pesa Till: 5827051</b>
+</div>
+
+<div class="card admin" id="adminPanel">
+<h2>Admin Dashboard</h2>
+<button onclick="resetVotes()">Reset All Votes</button>
+<button onclick="logout()">Logout</button>
+</div>
+
+<div class="card" id="loginBox">
+<h2>Admin Login</h2>
+<input type="text" id="user" placeholder="Username">
+<input type="password" id="pass" placeholder="Password">
+<button onclick="login()">Login</button>
+</div>
+
+<div class="vote-popup" id="votePopup">You’ve voted successfully!</div>
+
+</div>
+
+<footer>
+© 2026 Mbeere North Politics • Luxury Digital Polling
+</footer>
+
+<script>
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyA2tp6rXn0KfV7oSo_SN8RnYs2yE0o9FDw",
+    authDomain: "evurorewardpolls.firebaseapp.com",
+    databaseURL: "https://evurorewardpolls-default-rtdb.firebaseio.com",
+    projectId: "evurorewardpolls",
+    storageBucket: "evurorewardpolls.firebasestorage.app",
+    messagingSenderId: "663037967451",
+    appId: "1:663037967451:web:ae81ce9fdd6a25a74fd37e"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const aspirants = [
+    "Hon Albert Kigoro",
+    "Hon MUKANGU Junior",
+    "Hon Catherine",
+    "Hon John wa KIGOOCO",
+    "Hon MUKUI MATE",
+    "Undecided"
+  ];
+
+  let chart;
+
+  // Render aspirants
+  function renderCandidates(votes={}, highlight=null){
+    const box = document.getElementById("candidates");
+    box.innerHTML = "";
+    aspirants.forEach(name=>{
+      const div = document.createElement("div");
+      div.className = "candidate";
+      if(highlight===name) div.classList.add("vote-animation");
+      div.innerHTML = `
+        <h3>${name}</h3>
+        <button class="vote-btn" ${localStorage.getItem("voted")?'disabled':''} onclick="vote('${name}')">Vote</button>
+        <div class="stats">${votes[name]||0} votes</div>`;
+      box.appendChild(div);
+      if(highlight===name){
+        setTimeout(()=>div.classList.remove("vote-animation"),600);
+      }
+    });
+  }
+
+  function updateChart(votes, highlight=null){
+    const total = Object.values(votes).reduce((a,b)=>a+b,0)||1;
+    const data = aspirants.map(a=>((votes[a]/total)*100).toFixed(1));
+    const colors = ["#0b6623","#b11226","#d4af37","#006400","#8b0000","#555"];
+    if(highlight) colors[aspirants.indexOf(highlight)]="#ffd700";
+    if(chart) chart.destroy();
+    chart = new Chart(document.getElementById("pollChart"),{
+      type:"bar",
+      data:{labels:aspirants,datasets:[{label:"%",data:data,backgroundColor:colors}]},
+      options:{responsive:true,animation:{duration:800},plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100}}}
+    });
+  }
+
+  // Initialize missing votes in Firebase
+  aspirants.forEach(a=>{
+    db.ref('votes/'+a).once('value',snap=>{
+      if(!snap.exists()) db.ref('votes/'+a).set(0);
+    });
+  });
+
+  // Real-time votes listener
+  db.ref('votes').on('value',snap=>{
+    const votes = snap.val()||{};
+    renderCandidates(votes);
+    updateChart(votes);
+  });
+
+  // Vote function
+  function vote(name){
+    if(localStorage.getItem("voted")) return;
+    const voteRef = db.ref('votes/'+name);
+    voteRef.once('value',snap=>{
+      const current = snap.val()||0;
+      voteRef.set(current+1);
+      localStorage.setItem("voted","yes");
+
+      // Show vote popup
+      const popup = document.getElementById("votePopup");
+      popup.classList.add("show");
+      setTimeout(()=>popup.classList.remove("show"),2000);
+
+      // Disable all vote buttons
+      document.querySelectorAll(".vote-btn").forEach(btn=>btn.disabled=true);
+    });
+  }
+
+  // Share buttons
+  function shareFacebook(){window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(location.href));}
+  function shareWhatsApp(){window.open("https://wa.me/?text=Evurore%20Ward%20MCA%20Live%20Polls%20"+encodeURIComponent(location.href));}
+
+  // Admin
+  function login(){
+    const user=document.getElementById("user").value;
+    const pass=document.getElementById("pass").value;
+    if(user==="admin" && pass==="evurore2026"){
+      document.getElementById("adminPanel").style.display="block";
+      document.getElementById("loginBox").style.display="none";
+    }
+  }
+  function logout(){
+    document.getElementById("adminPanel").style.display="none";
+    document.getElementById("loginBox").style.display="block";
+  }
+  function resetVotes(){
+    if(confirm("Reset all votes?")){
+      aspirants.forEach(a=> db.ref('votes/'+a).set(0));
+      localStorage.removeItem("voted");
+      document.querySelectorAll(".vote-btn").forEach(btn=>btn.disabled=false);
+    }
+  }
+
+  // Initial render
+  renderCandidates();
+</script>
+
+</body>
+</html
