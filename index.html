@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EVURORE WARD MCA POLLS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{margin:0;font-family:Poppins,sans-serif;background:#050505;color:#fff;}
+header{background:linear-gradient(90deg,#b11226,#006b3f,#000);text-align:center;padding:40px 15px;}
+header h1{font-family:"Playfair Display",serif;margin:0;}
+header p{opacity:.9;}
+.timer{margin-top:10px;color:gold;font-weight:600;}
+.container{max-width:1100px;margin:auto;padding:20px;}
+.card{background:#111;border-radius:18px;padding:22px;margin-bottom:25px;box-shadow:0 10px 30px rgba(0,0,0,.6);}
+.candidate{display:flex;justify-content:space-between;align-items:center;background:#1a1a1a;padding:14px;border-radius:14px;margin-bottom:10px;}
+.profile{display:flex;align-items:center;gap:12px;}
+.icon{width:46px;height:46px;border-radius:50%;background:gold;color:#000;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.vote-btn{background:gold;border:none;padding:8px 20px;border-radius:22px;font-weight:600;cursor:pointer;}
+.vote-btn:disabled{background:#555;cursor:not-allowed;}
+.actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:10px;}
+.action-btn{padding:12px 22px;border-radius:25px;border:none;font-weight:600;cursor:pointer;}
+.fb{background:#1877f2;color:#fff;}
+.wa{background:#25d366;color:#fff;}
+.donate{background:gold;color:#000;}
+input{width:100%;padding:12px;border-radius:10px;border:none;margin-bottom:10px;}
+#adminPanel{display:none;}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>MBEERE NORTH POLITICS</h1>
+<p>For the coming <b>EVURORE WARD</b> by-elections, whom will you vote for as the next MCA?<br><b>Your vote counts!!</b></p>
+<div class="timer" id="timer">Loading countdown…</div>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h2>🗳️ Cast Your Vote</h2>
+<div id="candidates"></div>
+</div>
+
+<div class="card">
+<h2>📊 Live Results</h2>
+<canvas id="chart"></canvas>
+</div>
+
+<div class="actions">
+<button class="action-btn fb" onclick="shareFB()">Facebook</button>
+<button class="action-btn wa" onclick="shareWA()">WhatsApp</button>
+<button class="action-btn donate" onclick="donate()">Donate (Till 5827051)</button>
+</div>
+
+<div class="card" id="adminLogin">
+<h2>🔐 Admin Login</h2>
+<input id="adminUser" placeholder="Username">
+<input id="adminPass" type="password" placeholder="Password">
+<button class="action-btn donate" onclick="login()">Login</button>
+</div>
+
+<div class="card" id="adminPanel">
+<h2>⚙️ Admin Dashboard</h2>
+<button class="action-btn fb" onclick="resetVotes()">Reset Votes</button>
+<button class="action-btn wa" onclick="logout()">Logout</button>
+</div>
+
+</div>
+
+<script>
+// Firebase initialization
+firebase.initializeApp({
+apiKey:"AIzaSyA2tp6rXn0KfV7oSo_SN8RnYs2yE0o9FDw",
+authDomain:"evurorewardpolls.firebaseapp.com",
+databaseURL:"https://evurorewardpolls-default-rtdb.firebaseio.com",
+projectId:"evurorewardpolls",
+storageBucket:"evurorewardpolls.firebasestorage.app",
+messagingSenderId:"663037967451",
+appId:"1:663037967451:web:ae81ce9fdd6a25a74fd37e"
+});
+const db=firebase.database();
+
+// Aspirants
+const aspirants=[
+"Hon Albert Kigoro",
+"Hon MUKANGU Junior",
+"Hon Catherine",
+"Hon John wa KIGOOCO",
+"Hon MUKUI MATE",
+"Undecided"
+];
+
+// Device anti-cheat
+let deviceId = localStorage.getItem("deviceId");
+if(!deviceId){deviceId="dev_"+crypto.randomUUID(); localStorage.setItem("deviceId",deviceId);}
+let hasVoted = localStorage.getItem("voted")==="yes";
+let votingClosed=false;
+
+// Countdown
+let endTime=0;
+const timer=document.getElementById("timer");
+db.ref("endTime").once("value").then(s=>{
+if(!s.exists()){endTime=Date.now()+72*60*60*1000; db.ref("endTime").set(endTime);}
+else endTime=s.val();
+});
+setInterval(()=>{
+if(!endTime) return;
+let d=endTime-Date.now();
+if(d<=0){votingClosed=true; timer.innerText="⛔ Voting Closed"; return;}
+let h=Math.floor(d/3600000), m=Math.floor(d%3600000/60000), s=Math.floor(d%60000/1000);
+timer.innerText=`Voting ends in ${h}h ${m}m ${s}s`;
+},1000);
+
+// Render Candidates
+const box=document.getElementById("candidates");
+function render(votes={}){
+let total=Object.values(votes).reduce((a,b)=>a+b,0)||1;
+box.innerHTML="";
+aspirants.forEach(n=>{
+let pct=((votes[n]||0)/total*100).toFixed(1);
+box.innerHTML+=`<div class="candidate"><div class="profile"><div class="icon">👤</div><b>${n}</b></div><div>${pct}% 
+<button class="vote-btn" ${hasVoted||votingClosed?"disabled":""} onclick="vote('${n.replace(/'/g,"\\'")}')">Vote</button></div></div>`;
+});
+}
+
+// Voting logic
+function vote(name){
+if(hasVoted||votingClosed) return;
+db.ref("devices/"+deviceId).once("value").then(s=>{
+if(s.exists()){alert("You have already voted."); return;}
+hasVoted=true; localStorage.setItem("voted","yes");
+db.ref("votes/"+name).transaction(v=>(v||0)+1);
+db.ref("devices/"+deviceId).set(true);
+});
+}
+
+// Live votes listener
+db.ref("votes").on("value",s=>{
+const v=s.val()||{};
+render(v);
+updateChart(v);
+});
+
+// Chart
+const chart=new Chart(document.getElementById("chart"),{
+type:"bar",
+data:{labels:aspirants,datasets:[{data:new Array(6).fill(0),backgroundColor:"#d4af37"}]},
+options:{plugins:{legend:{display:false}}}
+});
+function updateChart(v){chart.data.datasets[0].data=aspirants.map(a=>v[a]||0); chart.update();}
+
+// Share + Donate
+function shareFB(){window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(location.href));}
+function shareWA(){window.open("https://wa.me/?text="+encodeURIComponent("Vote now! "+location.href));}
+function donate(){alert("Support via M-Pesa Till: 5827051");}
+
+// Admin
+function login(){
+if(document.getElementById("adminUser").value==="admin" && document.getElementById("adminPass").value==="31310739"){
+document.getElementById("adminLogin").style.display="none";
+document.getElementById("adminPanel").style.display="block";
+}else alert("Invalid credentials");
+}
+function logout(){
+document.getElementById("adminLogin").style.display="block";
+document.getElementById("adminPanel").style.display="none";
+}
+function resetVotes(){
+if(confirm("Reset all votes?")){
+db.ref("votes").remove(); db.ref("devices").remove();
+localStorage.removeItem("voted");
+render({});
+}
+}
+</script>
+</body>
+</html>
