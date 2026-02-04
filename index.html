@@ -21,9 +21,7 @@
   --red:#b11226;
   --text:#f1f1f1;
 }
-
 *{box-sizing:border-box;}
-
 body{
   margin:0;
   font-family:Poppins,Arial,sans-serif;
@@ -31,37 +29,11 @@ body{
   color:var(--text);
   padding:15px;
 }
-
-header{
-  text-align:center;
-  padding:20px 10px;
-  border-bottom:2px solid var(--gold);
-}
-
-header h1{
-  color:var(--gold);
-  margin:0;
-  font-size:28px;
-}
-
-header p{
-  margin-top:5px;
-  color:#aaa;
-  letter-spacing:1px;
-}
-
-.container{
-  max-width:1100px;
-  margin:auto;
-}
-
-#candidates{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:16px;
-  margin-top:25px;
-}
-
+header{text-align:center;padding:20px 10px;border-bottom:2px solid var(--gold);}
+header h1{color:var(--gold);margin:0;font-size:28px;}
+header p{margin-top:5px;color:#aaa;letter-spacing:1px;}
+.container{max-width:1100px;margin:auto;}
+#candidates{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:25px;}
 .candidate{
   background:linear-gradient(145deg,#111,#1b3d1b);
   border:1px solid var(--gold);
@@ -69,120 +41,39 @@ header p{
   padding:18px;
   text-align:center;
   box-shadow:0 10px 25px rgba(0,0,0,0.7);
+  position:relative;
+  overflow:hidden;
 }
-
-.candidate h3{
-  margin:0 0 12px;
-  color:var(--gold);
-  font-size:18px;
-}
-
-.vote-btn{
-  background:linear-gradient(90deg,var(--gold),#bfa335);
-  border:none;
-  padding:10px 22px;
-  border-radius:25px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
+.candidate h3{margin:0 0 8px;color:var(--gold);font-size:18px;}
+.vote-btn{background:linear-gradient(90deg,var(--gold),#bfa335);border:none;padding:10px 22px;border-radius:25px;font-weight:bold;cursor:pointer;}
+.vote-btn:disabled{opacity:0.5;cursor:not-allowed;}
 .vote-btn:active{transform:scale(0.95);}
-
-.vote-count{
-  margin-top:10px;
-  font-weight:bold;
+.vote-count{margin-top:6px;font-weight:bold;z-index:2;position:relative;}
+.vote-bar{
+  position:absolute;
+  left:0;
+  bottom:0;
+  height:6px;
+  background:#fff; /* White bar */
+  border-radius:0 0 14px 14px;
+  z-index:1;
+  transition: width 0.5s ease-in-out;
 }
-
-.bump{
-  animation:bump 0.35s ease;
-}
-
-@keyframes bump{
-  0%{transform:scale(1);}
-  50%{transform:scale(1.35);}
-  100%{transform:scale(1);}
-}
-
-.readonly{
-  opacity:0.5;
-  pointer-events:none;
-}
-
-#voteStatus{
-  text-align:center;
-  margin:18px 0;
-  color:#7CFF9B;
-  font-weight:bold;
-}
-
-.chart-box{
-  background:#fff;
-  border-radius:14px;
-  padding:15px;
-  margin-top:30px;
-}
-
-/* SHARE + MPESA */
-.actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
-  justify-content:center;
-  margin-top:30px;
-}
-
-.actions button{
-  padding:12px 20px;
-  border:none;
-  border-radius:30px;
-  font-weight:bold;
-  cursor:pointer;
-  font-size:15px;
-}
-
+.bump{animation:bump 0.35s ease;}
+@keyframes bump{0%{transform:scale(1);}50%{transform:scale(1.35);}100%{transform:scale(1);}}
+#voteStatus{text-align:center;margin:18px 0;color:#7CFF9B;font-weight:bold;}
+.chart-box{background:#fff;border-radius:14px;padding:15px;margin-top:30px;}
+.actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:30px;}
+.actions button{padding:12px 20px;border:none;border-radius:30px;font-weight:bold;cursor:pointer;font-size:15px;}
 .fb{background:#1877f2;color:#fff;}
 .wa{background:#25d366;color:#fff;}
 .mpesa{background:linear-gradient(90deg,#0b6623,#1faa59);color:#fff;}
-
-/* ADMIN */
-.admin{
-  margin-top:35px;
-  background:var(--card);
-  padding:18px;
-  border-radius:14px;
-  border:1px solid var(--gold);
-}
-
-.admin h3{
-  margin-top:0;
-  color:var(--gold);
-}
-
-.admin input{
-  width:100%;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:8px;
-  border:none;
-}
-
-.admin button{
-  width:100%;
-  padding:10px;
-  background:var(--red);
-  border:none;
-  color:#fff;
-  font-weight:bold;
-  border-radius:8px;
-  cursor:pointer;
-}
-
-footer{
-  text-align:center;
-  margin-top:30px;
-  font-size:13px;
-  color:#aaa;
-}
+.admin{margin-top:35px;background:var(--card);padding:18px;border-radius:14px;border:1px solid var(--gold);}
+.admin h3{margin-top:0;color:var(--gold);}
+.admin input{width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none;}
+.admin button{width:100%;padding:10px;background:var(--red);border:none;color:#fff;font-weight:bold;border-radius:8px;cursor:pointer;}
+.admin .vote-add{margin-bottom:10px;}
+footer{text-align:center;margin-top:30px;font-size:13px;color:#aaa;}
 </style>
 </head>
 
@@ -190,7 +81,7 @@ footer{
 
 <header>
   <h1>EVURORE WARD MCA LIVE POLL</h1>
-  <p>MBEERE NORTH • REAL-TIME CAMPAIGN DATA</p>
+  <p>MBEERE NORTH • REAL-TIME CAMPAIGN DASHBOARD</p>
 </header>
 
 <div class="container">
@@ -203,29 +94,38 @@ footer{
     <canvas id="pollChart"></canvas>
   </div>
 
-  <!-- SHARE + MPESA -->
   <div class="actions">
     <button class="fb" onclick="shareFacebook()">Share on Facebook</button>
     <button class="wa" onclick="shareWhatsApp()">Share on WhatsApp</button>
     <button class="mpesa" onclick="mpesaSupport()">Support via M-Pesa</button>
   </div>
 
-  <!-- ADMIN -->
-  <div class="admin">
-    <h3>Admin Control</h3>
-    <input type="password" id="adminPin" placeholder="Admin PIN">
-    <button onclick="resetVotes()">Reset All Votes</button>
+  <!-- ADMIN LOGIN -->
+  <div class="admin" id="loginBox">
+    <h3>Admin Login</h3>
+    <input type="password" id="adminPinLogin" placeholder="Enter Admin PIN">
+    <button onclick="login()">Login</button>
     <div id="adminMsg"></div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div class="admin" id="adminPanel" style="display:none">
+    <h3>Admin Panel</h3>
+    <div id="voteAddInputs"></div>
+    <button onclick="submitVotes()">Add Votes</button>
+    <button style="margin-top:10px;" onclick="resetAllVotes()">Reset All Votes</button>
+    <button style="margin-top:10px;" onclick="logout()">Logout</button>
+    <div id="adminMsgPanel"></div>
   </div>
 
 </div>
 
 <footer>
-© 2026 Evurore Ward Politics • Powered by WA Shirú Media Hub
+© 2026 Evurore Ward Politics • Powered by WA Shirú Media Hub 0724253280
 </footer>
 
 <script>
-/* FIREBASE */
+/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyA2tp6rXn0KfV7oSo_SN8RnYs2yE0o9FDw",
   authDomain: "evurorewardpolls.firebaseapp.com",
@@ -235,7 +135,6 @@ const firebaseConfig = {
   messagingSenderId: "663037967451",
   appId: "1:663037967451:web:ae81ce9fdd6a25a74fd37e"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -250,31 +149,37 @@ const aspirants=[
   "Undecided"
 ];
 
-/* INIT */
-aspirants.forEach(n=>{
-  db.ref("votes/"+n).get().then(s=>{
-    if(!s.exists()) db.ref("votes/"+n).set(0);
-  });
-});
+/* INIT VOTES */
+aspirants.forEach(n=>db.ref("votes/"+n).transaction(v=>v===null?0:v));
 
-/* RENDER */
+/* RENDER CANDIDATES */
 function render(votes){
   const box=document.getElementById("candidates");
   box.innerHTML="";
-  aspirants.forEach(n=>{
-    const locked=localStorage.getItem("voted")?"readonly":"";
+  const voted=localStorage.getItem("voted");
+  const totalVotes=Object.values(votes).reduce((a,b)=>a+b,0)||1;
+
+  // Sort aspirants by votes descending
+  const sorted = [...aspirants].sort((a,b)=> (votes[b]||0)-(votes[a]||0));
+
+  sorted.forEach(n=>{
+    const pct=Math.round((votes[n]||0)/totalVotes*100);
     box.innerHTML+=`
-      <div class="candidate ${locked}">
+      <div class="candidate">
         <h3>${n}</h3>
-        <button class="vote-btn" onclick="vote('${n}')">Vote</button>
-        <div class="vote-count" id="count-${n}">${votes[n]||0} votes</div>
+        <button class="vote-btn" onclick="vote('${n}')" ${voted?'disabled':''}>Vote</button>
+        <div class="vote-count" id="count-${n}">${votes[n]||0} votes (${pct}%)</div>
+        <div class="vote-bar" id="bar-${n}" style="width:${pct}%;"></div>
       </div>
     `;
   });
   updateChart(votes);
+  if(document.getElementById("adminPanel").style.display!=="none"){
+    renderAdminInputs();
+  }
 }
 
-/* VOTE */
+/* VOTE FUNCTION */
 function vote(name){
   if(localStorage.getItem("voted")){
     document.getElementById("voteStatus").innerText="You have already voted.";
@@ -285,7 +190,7 @@ function vote(name){
   document.getElementById("voteStatus").innerText="Thank you for voting!";
 }
 
-/* LIVE */
+/* LIVE UPDATES */
 db.ref("votes").on("value",snap=>{
   const votes=snap.val()||{};
   render(votes);
@@ -306,39 +211,57 @@ function updateChart(votes){
   if(chart) chart.destroy();
   chart=new Chart(document.getElementById("pollChart"),{
     type:"bar",
-    data:{labels:aspirants,datasets:[{data:data,backgroundColor:"#0b6623"}]},
+    data:{labels:aspirants,datasets:[{data:data,backgroundColor:["#0b6623","#b11226","#d4af37","#006400","#8b0000","#555"]}]},
     options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100}}}
   });
 }
 
-/* ADMIN */
-function resetVotes(){
-  if(document.getElementById("adminPin").value!==ADMIN_PIN){
-    document.getElementById("adminMsg").innerText="Invalid PIN";
-    return;
-  }
-  aspirants.forEach(n=>db.ref("votes/"+n).set(0));
-  localStorage.removeItem("voted");
-  document.getElementById("adminMsg").innerText="Votes reset successfully";
-}
-
 /* SHARING */
-function shareFacebook(){
-  window.open(
-    "https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(location.href),
-    "_blank"
-  );
-}
+function shareFacebook(){window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(location.href), "_blank");}
+function shareWhatsApp(){window.open("https://wa.me/?text="+encodeURIComponent("Evurore Ward MCA Live Poll — Vote now! "+location.href), "_blank");}
+function mpesaSupport(){alert("Support us via M-Pesa Till Number:\n\n5827051");}
 
-function shareWhatsApp(){
-  window.open(
-    "https://wa.me/?text="+encodeURIComponent("Evurore Ward MCA Live Poll — Vote now! "+location.href),
-    "_blank"
-  );
+/* ADMIN */
+function login(){
+  const pin=document.getElementById("adminPinLogin").value;
+  if(pin!==ADMIN_PIN){document.getElementById("adminMsg").innerText="Invalid PIN"; return;}
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("adminPanel").style.display="block";
+  document.getElementById("adminMsg").innerText="";
+  renderAdminInputs();
 }
-
-function mpesaSupport(){
-  alert("Support Civic Engagement via M-Pesa Till Number:\n\n5827051");
+function logout(){
+  document.getElementById("loginBox").style.display="block";
+  document.getElementById("adminPanel").style.display="none";
+  document.getElementById("adminMsgPanel").innerText="";
+}
+function renderAdminInputs(){
+  const votesBox=document.getElementById("voteAddInputs");
+  votesBox.innerHTML="";
+  aspirants.forEach(n=>{
+    votesBox.innerHTML+=`
+      <div class="vote-add">
+        <label style="color:var(--gold);margin-bottom:5px;">${n}</label>
+        <input type="number" min="0" value="0" id="add-${n}">
+      </div>
+    `;
+  });
+}
+function submitVotes(){
+  aspirants.forEach(n=>{
+    const val=parseInt(document.getElementById("add-"+n).value)||0;
+    if(val>0){ 
+      db.ref("votes/"+n).transaction(v=>(v||0)+val);
+    }
+  });
+  document.getElementById("adminMsgPanel").innerText="Votes added successfully";
+  renderAdminInputs();
+}
+function resetAllVotes(){
+  if(!confirm("Are you sure you want to reset all votes?")) return;
+  aspirants.forEach(n=> db.ref("votes/"+n).set(0) );
+  localStorage.removeItem("voted");
+  document.getElementById("adminMsgPanel").innerText="All votes have been reset.";
 }
 </script>
 
